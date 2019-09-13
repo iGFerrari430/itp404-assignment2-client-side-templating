@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Assignment2_Xiaowen_Zhu</title>
+  <link rel = "stylesheet"
+  type = "text/css"
+  href = "style.css" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="purify.min.js"></script>
+  <script src="hb.js"></script>
+  <script src="moment.js"></script>
+
+</head> 
+<body>
+
+<h3>ITP 404 Assignment 2</h3>
+
+<form onsubmit="return submitForm()">  
+  <label for="inputArea">Search: </label>
+  <input type="text" name="inputArea" id="area">
+  <input type="submit" value="Submit">
+</form>
+
+
+<div id="results"></div>
+
+<template id="subreddit-template">
+  {{#each children}}
+  <div style="border-bottom: 1px solid black">
+      <strong><a href={{data.url}}>{{data.title}}</a></strong>
+      <p>score: {{data.score}}</p>
+      <p>subscriber count: {{subsNum data.subreddit_subscribers}}</p>
+      {{#ifHas data.num_comments}}
+        <p>comment count: {{subsNum data.num_comments}}</p>
+      {{else}}
+        <p>No comments</p>
+      {{/ifHas}}
+  </div>
+
+  {{/each}}
+</template>
+
+<script>
+    const template = Handlebars.compile(
+      document.getElementById('subreddit-template').innerHTML
+    );
+
+    Handlebars.registerHelper('subsNum',function(num) {
+      return num.toLocaleString();
+    })
+
+    Handlebars.registerHelper('ifHas', function(num,opts) {
+      let checker = (num > 0);
+      if (checker){
+        return opts.fn(this);
+      }else{
+        return opts.inverse(this);
+      }
+    });
+    
+    function submitForm() {
+      
+      const val = $( "#area" ).val();
+      let Requrl = `https://www.reddit.com/r/${val}.json`;
+      $('#results').html('<div class="load-container load2"><div class="loader">Loading...</div></div>')
+      let promise = $.ajax({
+        type: 'GET',
+        url: Requrl,
+        error: function () {
+          $("#results").html('Opps. this subreddit does not exist');
+        }
+      });
+      
+      promise.then(function(res){
+        console.log(res.data);
+        let html = '';
+        if (res.data.children.length > 0){
+          
+          html = template({
+            children: res.data.children
+          });
+        }else{
+          html += "well, this subreddit exist but has no post"
+        }
+
+        $("#results").html(html);
+      })
+
+      return false;
+
+
+     
+    }
+</script>
+
+</body>
+</html>
